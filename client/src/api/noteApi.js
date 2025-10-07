@@ -15,8 +15,7 @@ export const getSubjects =(semesterId)=>api.get(`/subject/${semesterId}/subjects
 export const addSubject =(semesterId,data)=>api.post(`/subject/${semesterId}/subjects`,data);
 
 export const getNotes =(subjectId)=>api.get(`/note/${subjectId}/notes`);
-export const addNote=(subjectId,formData,config)=>api.post(`/note/${subjectId}/notes`,formData,{
-    headers:{"Content-Type":"multipart/form-data"},
-    ...config,
+export const addNote=(selectedSubject,formData)=>api.post(`/note/${selectedSubject}/notes`,formData,{
+    headers:{"Content-Type":"multipart/form-data"}
 });
 
