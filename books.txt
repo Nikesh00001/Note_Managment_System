@@ -1,0 +1,145 @@
+import axios from 'axios';
+import React, { useEffect, useState } from 'react'
+
+const Book = () => {
+
+    const [courses,setCourses]=useState([]);
+    const [years,setYears]=useState([]);
+    const[semesters,setSemester]=useState([]);
+    const[subjects,setSubject]=useState([]);
+    const[notes,setNote]=useState([]);
+
+
+
+
+    const[showAdd,setShowAdd] =useState("courses");
+    const[selectedSubjectId,setSelectedSubjectId]=useState(null);
+
+    useEffect(()=>{
+      fetchCourses();
+        
+
+    },[]);
+      const fetchCourses = async ()=>{
+        const res =await axios.get("http://localhost:5000/api/courses/courses");
+        setCourses(res.data);
+        
+      }
+      const fetchYear =async (id)=>{
+        const res=await axios.get(`http://localhost:5000/api/year/${id}/years`);
+        setYears(res.data);
+      }
+      const fetchSemester =async (id)=>{
+        const res=await axios.get(`http://localhost:5000/api/semester/${id}/semesters`);
+        setSemester(res.data);
+      }
+
+      const fetchSubject =async(id)=>{
+        const res = await axios.get(`http://localhost:5000/api/subject/${id}/subjects`);
+        setSubject(res.data);
+       
+      }
+          const fetchNote =async (id)=>{
+           const res =await axios.get(`http://localhost:5000/api/note/${id}/notes`);
+           setNote(res.data); 
+           console.log(res.data);
+          }
+      
+
+
+
+
+
+
+
+
+      const handleclick=(id,name)=>{
+        if(name==="courses"){
+           fetchYear(id);
+         setShowAdd("Years");}
+         else if(name==="Years"){
+          fetchSemester(id);
+          setShowAdd("Semesters");
+         }
+          else if(name==="Semesters"){
+          fetchSubject(id);
+          setShowAdd("Subjects");
+          }
+          else if(name==="Subjects"){
+            fetchNote(id);
+            setShowAdd("Notes");
+          }
+        
+          
+        
+console.log(notes);
+
+      }
+  return (
+   <>
+
+
+   <div className='w-screen flex flex-col  items-center bg-red-200 pt-12'>
+    <h2 className='bg-blue-400 w-[18rem] flex justify-center text-2xl mb-8'>select your {showAdd}</h2>
+    { showAdd==='courses' &&
+   <div>
+   {
+    courses.map((course)=>(
+      <div key={course._id} onClick={()=>{handleclick(course._id,"courses");}} className='w-[20rem] font-semibold text-xl font-sans text-[#353232] mb-6 flex justify-center items-center  h-[4rem] rounded-lg bg-[#36a136]'>{course.name}</div>
+    ))
+   }
+   </div>
+}
+ { showAdd==='Years' &&
+   <div>
+   {
+    years.map((year)=>(
+      <div key={year._id} onClick={()=>handleclick(year._id,showAdd)} className='w-[20rem] font-semibold text-xl font-sans text-[#353232] mb-6 flex justify-center items-center  h-[4rem] rounded-lg bg-[#36a136]'>{year.name}</div>
+    ))
+   }
+   </div>
+}
+ { showAdd==='Semesters' &&
+   <div>
+   {
+    semesters.map((semester)=>(
+      <div key={semester._id} onClick={()=>handleclick(semester._id,showAdd)} className='w-[20rem] font-semibold text-xl font-sans text-[#353232] mb-6 flex justify-center items-center  h-[4rem] rounded-lg bg-[#36a136]'>{semester.name}</div>
+    ))
+   }
+   </div>
+}
+{ showAdd==='Subjects' &&
+   <div>
+   {
+    subjects.map((sub)=>(
+      <div key={sub._id} onClick={()=>{handleclick(sub._id,showAdd);}} className='w-[20rem] font-semibold text-xl font-sans text-[#353232] mb-6 flex justify-center items-center  h-[4rem] rounded-lg bg-[#36a136]'>{sub.name}</div>
+    ))
+   }
+   </div>
+}
+{ showAdd==='Notes' &&
+   <div>
+   {
+    notes.map((note)=>(<div>  
+      <div key={note._id} onClick={()=>{}} className='w-[20rem] font-semibold text-xl font-sans text-[#353232] mb-6 flex justify-center items-center  h-[4rem] rounded-lg bg-[#36a136]'>{note.title}</div>
+     <a
+  href={note.fileUrl}
+  key={note._id}
+  download  // ⬅ forces download
+  target="_blank"
+  rel="noopener noreferrer"
+  className="border border-gray-500 rounded-2xl bg-blue-300 text-blue-700 px-3"
+>
+ download
+</a>
+      </div>
+    ))
+   }
+   </div>
+}
+   </div>
+   </>
+  )
+}
+
+export default Book

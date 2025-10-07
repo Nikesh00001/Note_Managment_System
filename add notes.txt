@@ -1,0 +1,288 @@
+import React, { useEffect, useState } from 'react'
+import axios from "axios";
+
+const AddNotes = () => {
+  const [courses, setCourses] = useState([]);
+  const [years, setYears] = useState([]);
+  const [semesters, setSemesters] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [notes, setNotes] = useState({ title: "", file: null, type: "" });
+
+
+  const [selectedCourses, setSelectedCourses] = useState("");
+  const [courseCode, setCourseCode] = useState("N/A");
+  const [selectedYears, setSelectedYears] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+
+  const [showAdd, setShowAdd] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [inputform, setInputForm] = useState(false);
+
+
+  const [loading, setLoading] = useState(false);
+  const handlechange =(e)=>{
+    const{name,value,files } =e.target;
+    setNotes((prev)=>({
+      ...prev,
+      [name]:files?files[0]:value
+    }))
+  }
+
+  useEffect(() => {
+    fetchcourses();
+  }, []);
+
+  const fetchcourses = async () => {
+    const res = await axios.get("http://localhost:5000/api/courses/courses");
+    setCourses(res.data);
+  };
+  const fetchYears = async (courseId) => {
+    if (!courseId)
+      return;
+    const res = await axios.get(`http://localhost:5000/api/year/${courseId}/years`);
+    setYears(res.data);
+  }
+
+  const fetchSemester = async (yearId) => {
+    const res = await axios.get(`http://localhost:5000/api/semester/${yearId}/semesters`);
+    setSemesters(res.data);
+  }
+  const fetchSubject = async (semesterId) => {
+    const res = await axios.get(`http://localhost:5000/api/subject/${semesterId}/subjects`);
+    setSubjects(res.data);
+  }
+  const handleNote =async (e)=>{
+    e.preventDefault();
+    const formData =new FormData();
+    formData.append("title",notes.title);
+    formData.append("file",notes.file);
+    formData.append("type",notes.type);
+    await axios.post(`http://localhost:5000/api/note/${selectedSubject}/notes`,formData,{
+      headers:{"Content-Type":"multipart/form-data"}
+    });
+
+  };
+
+
+
+
+
+
+
+
+
+  const handleAdd = async (type) => {
+    if (type === "course") {
+      const res = await axios.post("http://localhost:5000/api/courses/courses",
+        { name: inputValue, code: courseCode }
+      );
+      setCourses([...courses, res.data])
+    } else if (type === "years") {
+      const res = await axios.post(`http://localhost:5000/api/year/${selectedCourses}/years`,
+        { name: inputValue },
+      );
+      setYears([...years, res.data])
+    } else if (type === "semester") {
+      const res = await axios.post(`http://localhost:5000/api/semester/${selectedYears}/semesters`, { name: inputValue });
+      setSemesters([...semesters, res.data]);
+    }
+    else if (type === "subject") {
+      const res = await axios.post(`http://localhost:5000/api/subject/${selectedSemester}/subjects`, {
+        name: inputValue
+      });
+      setSubjects([...subjects, res.data]);
+      
+    }
+
+    setCourseCode("N/A");
+    setInputValue("");
+    setShowAdd(null);
+
+  }
+
+
+
+  return (
+    <div className='flex items-center pt-[6rem] flex-col min-h-[94vh] bg-[#bbc0f3de] '>
+      <h1>add Notes</h1>
+      <div className='pl-16 rounded-xl items-start w-[40rem] justify-center min-h-[28rem] bg-white border shadow'>
+        <div className='mt-6'>
+          <select
+            value={selectedCourses}
+            className='w-[15rem] h-[3rem]  rounded-lg p-2 mr-4 border border-orange-100'
+            onChange={(e) => {
+              setSelectedCourses(e.target.value);
+              fetchYears(e.target.value);
+            }}>
+            <option value="">Select Course</option>
+            {
+              courses.map((c) => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))
+            }
+          </select>
+          {
+            showAdd === "course" ?
+              <div>
+                <input
+                  type='text'
+                  placeholder='ADD NEW COURSE'
+                  className='border p-3 rounded'
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                />
+                <input
+                  type='text'
+                  placeholder='add Course Code'
+                  className='border p-3 rounded'
+                  value={courseCode}
+                  onChange={(e) => setCourseCode(e.target.value)}
+                />
+                <button
+                  onClick={() => handleAdd("course")}
+                  className='bg-[#188318d7] text-white px-3 rounded'
+                >
+                  {
+                    loading ? "loading.." : "Saved"
+                  }
+                </button>
+              </div>
+              :
+              <button onClick={() => setShowAdd("course")}
+                className='bg-[#4b1fc5ea] h-[3rem] w-[8rem] rounded text-white px-2'
+              >
+                add Course
+              </button>
+
+          }
+        </div>
+        <select value={selectedYears}
+          className='w-[15rem] h-[3rem]  rounded-lg p-2 mr-4 border border-orange-100'
+          onChange={(e) => {
+            setSelectedYears(e.target.value);
+            fetchSemester(e.target.value);
+
+          }}>
+          <option value="">select years</option>
+          {
+            years.map((y) => (
+              <option value={y._id} key={y._id}>{y.name}</option>
+            ))
+          }
+
+        </select>
+        {showAdd == "years" ?
+          <div>
+            <input type="text"
+              placeholder='Enter Years '
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)} />
+            <button onClick={() => handleAdd("years")}>saved</button>
+          </div> :
+          <button
+            onClick={() => setShowAdd("years")}
+            className='bg-[#4b1fc5ea] h-[3rem] w-[8rem] rounded text-white px-2 mt-3'
+          >Add Years </button>
+
+        }
+
+        <select
+          value={selectedSemester}
+          onChange={(e) => {
+            setSelectedSemester(e.target.value);
+            fetchSubject(e.target.value);
+          }}
+
+        >
+          <option value="">Select Semester</option>
+          {
+            semesters.map((s) => (
+              <option value={s._id} key={s._id}>{s.name}</option>
+            ))
+          }
+        </select>
+        {
+          showAdd === "semester" ?
+            <div>
+              <input type="text"
+                placeholder='Enter your Semester'
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+              />
+              <button onClick={() => handleAdd("semester")} >Saved</button>
+            </div>
+            :
+            <button onClick={() => setShowAdd("semester")}>Add Semester</button>
+        }
+        <select value={selectedSubject}
+          onChange={(e) => {
+            setInputForm(true);
+            setSelectedSubject(e.target.value);
+            
+          }}>
+          <option value="">select your Subject</option>
+          {
+            subjects.map((sub) => (
+              <option value={sub._id} key={sub._id}>{sub.name}</option>
+            ))
+          }
+
+        </select>
+        {
+          showAdd === "subject" ?
+            <div>
+              <input type="text"
+                placeholder='enter your subject'
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+              />
+              <button onClick={() => handleAdd("subject")}>Saved</button>
+            </div>
+            :
+            <button onClick={() => setShowAdd("subject")} className='w-[8rem] bg-blue-400 rounded'>Add Subject</button>
+        }
+        {
+          inputform && <form >
+            <input type="text"
+            name="title"
+              placeholder='Enter Your notes Title'
+              value={notes.title}
+              onChange={handlechange} />
+
+
+            <select 
+            value={notes.type} 
+            onChange={handlechange} 
+            name="type">
+              <option value="">Select your type</option>
+              <option value="note">Note</option>
+              <option value="question-paper">Question Paper</option>
+              <option value="book">Book PDF</option>
+              <option value="assignment">Assignment</option>
+              <option value="lab-report">Lab Report</option>
+              <option value="syllabus">Syllabus</option>
+              <option value="presentation">Presentation (PPT)</option>
+              <option value="project">Project / Mini Project</option>
+              <option value="reference">Reference Material</option>
+              <option value="solution">Solutions / Answer Key</option>
+              <option value="other">Other</option>
+            </select>
+            <input type="file"
+            name="file"
+            placeholder='Enter your note here...'
+            onChange={handlechange} />
+            <button type='submit' onClick={handleNote}>Save Note</button>
+
+          </form>
+        }
+
+
+
+      </div>
+    </div>
+
+  )
+}
+
+export default AddNotes
